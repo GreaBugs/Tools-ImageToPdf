@@ -162,6 +162,7 @@ if __name__ == "__main__":
     elif mode == '个人成绩':
         data = read_excel_file(excel_path, sheet_name="Sheet1")
         shen.info(f"人头数：{len(data)}")
+        assert len(image_files) / num_page == len(data), "数值有差异！"
 
         i = 0
         for item in data:
