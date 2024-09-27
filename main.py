@@ -3,6 +3,7 @@ import pandas as pd
 from datetime import datetime
 from PIL import Image, ExifTags
 import pillow_heif
+import logging
 
 
 def heic_to_jpg(input_file):
@@ -16,6 +17,17 @@ def heic_to_jpg(input_file):
         heif_file.stride,
     )
     return image
+
+
+def make_logger(name):
+    shen = logging.getLogger(name)
+    shen.setLevel(logging.INFO)
+    consoleHandler = logging.StreamHandler()
+    consoleHandler.setLevel(logging.INFO)
+    simple_formatter = logging.Formatter('%(asctime)s %(name)s %(levelname)s %(message)s')
+    consoleHandler.setFormatter(simple_formatter)
+    shen.addHandler(consoleHandler)
+    return shen
 
 
 def get_image_orientation(image_path):
@@ -54,7 +66,7 @@ def get_image_orientation(image_path):
 
 def get_images_sorted_by_creation_time(folder_path):
     all_files = os.listdir(folder_path)
-    image_files = [f for f in all_files if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.gif', 'heic'))]
+    image_files = [f for f in all_files if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.gif', 'heic', ))]
     image_files_with_time = [(f, os.path.getctime(os.path.join(folder_path, f))) for f in image_files]
     # sorted_files = sorted(image_files_with_time, key=lambda x: x[1])
     sorted_files_with_time = [(f, datetime.fromtimestamp(ctime).strftime('%Y-%m-%d %H:%M:%S')) for f, ctime in image_files_with_time]
@@ -88,9 +100,13 @@ def rotate_image(image_path):
 
     # 如果有旋转角度，执行旋转操作
     if rotation_angle and rotation_angle != 0:
-        print(f"旋转图像 {rotation_angle} 度")
+        shen.info(f"旋转图像 {rotation_angle} 度")
         # 使用 Pillow 的 rotate 方法进行旋转（expand=True 确保图像不会被裁剪）
         img = img.rotate(angle=rotation_angle, expand=True)
+
+    if img.height < img.width:
+        img = img.rotate(angle=90, expand=True)
+        shen.warning(f"{image_path}图像非竖直方向，程序判断旋转了 {rotation_angle} 度，需人工核验！")
 
     return img
 
@@ -103,21 +119,24 @@ def images_to_pdf(image_files_list, output_pdf):
 
     if images:
         images[0].save(output_pdf, save_all=True, append_images=images[1:])
-        print(f"PDF 文件已保存为: {output_pdf}")
+        shen.info(f"PDF 文件已保存为: {output_pdf}")
     else:
-        print("没有提供有效的图像文件。")
+        shen.warning("没有提供有效的图像文件。")
 
 
 if __name__ == "__main__":
-    global images_dir, excel_path, id_column_name, name_column_name, mode
-    mode = "点名册"     # "点名册"
+    shen = make_logger("image_to_pdf")
+
+    global images_dir, excel_path, id_column_name, name_column_name, mode, num_page
+    num_page = 8
+    mode = '个人成绩'     # "点名册"
     id_column_name = "学号"
     name_column_name = "姓名"
     images_dir = "Image"
     excel_path = "Excel/名单.xlsx"
 
     image_files = get_images_sorted_by_creation_time(images_dir)
-    print("图片数量：", len(image_files))
+    shen.info(f"图片数量：{len(image_files)}")
 
     if mode == "点名册":
         output_pdf = os.path.join(images_dir, mode + ".pdf")
@@ -127,14 +146,14 @@ if __name__ == "__main__":
 
     elif mode == '个人成绩':
         data = read_excel_file(excel_path, sheet_name="Sheet1")
-        print("人头数：", len(data))
+        shen.info(f"人头数：{len(data)}")
 
         i = 0
         for item in data:
-            item_image_files = [x[0] for x in image_files[i:i+8]]
-            output_pdf = os.path.join(images_dir, str(item[0]) + '_' + item[1] + ".pdf")
+            item_image_files = [x[0] for x in image_files[i:i+num_page]]
+            output_pdf = os.path.join(images_dir, str(item[0]) + '_' + str(item[1]) + ".pdf")
             images_to_pdf(item_image_files, output_pdf)
-            i += 8
+            i += num_page
     else:
-        print("Error! mode must be in ['点名册', '个人成绩']")
+        shen.error("mode must be in ['点名册', '个人成绩']")
 
