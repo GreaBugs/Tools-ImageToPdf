@@ -113,8 +113,8 @@ if __name__ == "__main__":
     mode = "点名册"     # "点名册"
     id_column_name = "学号"
     name_column_name = "姓名"
-    images_dir = "E:\Pycharm_code\My_code\wanglichun\\1"
-    excel_path = "E:\Pycharm_code\My_code\wanglichun\\1\\111.xlsx"
+    images_dir = "Image"
+    excel_path = "Excel/名单.xlsx"
 
     image_files = get_images_sorted_by_creation_time(images_dir)
     print("图片数量：", len(image_files))
