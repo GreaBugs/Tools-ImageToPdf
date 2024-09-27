@@ -140,18 +140,19 @@ def images_to_pdf(image_files_list, output_pdf):
 
 
 if __name__ == "__main__":
-    shen = make_logger("image_to_pdf")
-
     global images_dir, excel_path, id_column_name, name_column_name, mode, num_page
+    shen = make_logger("image_to_pdf")
+    
+    # ##############参数调整区域###########
     num_page = 8
     mode = '个人成绩'     # "点名册"
     id_column_name = "学号"
     name_column_name = "姓名"
     images_dir = "Image"
     excel_path = "Excel/名单.xlsx"
+    # ####################################
 
     image_files = get_images_sorted_by_creation_time(images_dir)
-    shen.info(f"图片数量：{len(image_files)}")
 
     if mode == "点名册":
         output_pdf = os.path.join(images_dir, mode + ".pdf")
@@ -161,8 +162,7 @@ if __name__ == "__main__":
 
     elif mode == '个人成绩':
         data = read_excel_file(excel_path, sheet_name="Sheet1")
-        shen.info(f"人头数：{len(data)}")
-        assert len(image_files) / num_page == len(data), "数值有差异！"
+        assert len(image_files) / num_page == len(data), f"图片数量：{len(image_files)}, 人头数：{len(data)}, 数量有问题！"
 
         i = 0
         for item in data:
