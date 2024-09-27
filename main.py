@@ -6,6 +6,32 @@ import pillow_heif
 import logging
 
 
+class ColoredFormatter(logging.Formatter):
+    COLOR_CODE = {
+        'WARNING': '\033[93m',  
+        'INFO': '\033[92m',     
+        'DEBUG': '\033[94m',    
+        'ERROR': '\033[91m',    
+        'CRITICAL': '\033[95m', 
+        'ENDC': '\033[0m'       
+    }
+
+    def format(self, record):
+        log_color = self.COLOR_CODE.get(record.levelname, self.COLOR_CODE['ENDC'])
+        return f"{log_color}{super().format(record)}{self.COLOR_CODE['ENDC']}"
+
+
+def make_logger(name):
+    shen = logging.getLogger(name)
+    shen.setLevel(logging.INFO)
+    consoleHandler = logging.StreamHandler()
+    consoleHandler.setLevel(logging.INFO)
+    simple_formatter = ColoredFormatter('%(asctime)s %(name)s %(levelname)s %(message)s')
+    consoleHandler.setFormatter(simple_formatter)
+    shen.addHandler(consoleHandler)
+    return shen
+
+
 def heic_to_jpg(input_file):
     heif_file = pillow_heif.read_heif(input_file)
     image = Image.frombytes(
@@ -17,17 +43,6 @@ def heic_to_jpg(input_file):
         heif_file.stride,
     )
     return image
-
-
-def make_logger(name):
-    shen = logging.getLogger(name)
-    shen.setLevel(logging.INFO)
-    consoleHandler = logging.StreamHandler()
-    consoleHandler.setLevel(logging.INFO)
-    simple_formatter = logging.Formatter('%(asctime)s %(name)s %(levelname)s %(message)s')
-    consoleHandler.setFormatter(simple_formatter)
-    shen.addHandler(consoleHandler)
-    return shen
 
 
 def get_image_orientation(image_path):
