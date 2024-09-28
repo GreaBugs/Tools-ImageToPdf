@@ -126,7 +126,10 @@ def rotate_image(image_path):
     return img
 
 
-def images_to_pdf(image_files_list, output_pdf):
+def images_to_pdf(image_files_list, output_pdf， reversed=Flase):
+    if reversed:
+        image_files_list = reversed(image_files_list)
+    
     images = []
     for img in image_files_list:
         angel = get_image_orientation(os.path.join(images_dir, img))
